@@ -13,9 +13,9 @@ class Products(Model):
 
 class Supplier(Model):
     id = fields.IntField(pk=True)
-    name = fields.CharField(max_length=25, nullable=False)
-    company = fields.CharField(max_length=25, nullable=False)
-    email = fields.CharField(max_length=25, nullable=False)
+    name = fields.CharField(max_length=255, nullable=False)
+    company = fields.CharField(max_length=255, nullable=False)
+    email = fields.CharField(max_length=255, nullable=False)
     phone_number = fields.CharField(max_length=15, nullable=False)
 
 

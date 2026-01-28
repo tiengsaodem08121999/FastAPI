@@ -1,6 +1,23 @@
+import email
+from email.mime import message
 from fastapi import FastAPI
 from tortoise.contrib.fastapi import register_tortoise
 from models import (supplier_pydantic, supplier_pydanticIn, Supplier, product_pydanticIn, product_pydantic, Products)
+
+#email:
+from fastapi import FastAPI, BackgroundTasks, UploadFile, File, Form
+from starlette.responses import JSONResponse
+from starlette.requests import Request
+from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
+from pydantic import EmailStr
+from pydantic import EmailStr, BaseModel
+from typing import List
+
+#docenv
+from dotenv import dotenv_values
+
+#credentials
+credentials = dict(dotenv_values(".env"))
 
 app = FastAPI()
 
@@ -75,6 +92,52 @@ async def delete_product(product_id: int):
     if not deleted_count:
         return {"status": "error", "message": f"Product with id {product_id} not found"}
     return {"status": "success", "message": f"Deleted product with id {product_id}"}
+
+class EmailSchema(BaseModel):
+    email: List[EmailStr]
+
+class EmailContent(BaseModel):
+    message: str
+    subject: str
+
+conf = ConnectionConfig(
+    MAIL_USERNAME = credentials['EMAIL'],
+    MAIL_PASSWORD = credentials['PASSWORD'],
+    MAIL_FROM = credentials['EMAIL'],
+    MAIL_PORT = 587,
+    MAIL_SERVER = "smtp.gmail.com",
+    MAIL_STARTTLS=True,   # ✅ thay cho MAIL_TLS
+    MAIL_SSL_TLS=False,  # ✅ thay cho MAIL_SSL
+)
+
+@app.post("/email/{product_id}")
+async def send_email(product_id: int, content: EmailContent):
+
+    product = await Products.get(id=product_id)
+    supplier = await product.supplied_by
+    supplier_email = [supplier.email]
+
+    html = """
+        <h5>John Doe,</h5>
+        <p>We would like to inform you about the latest update regarding our product with ID: {product_id}.</p>
+        </br>
+        <p>{content.subject}</p>
+        </br>
+        <p>{content.message}</p>
+        </br>
+        <h6>Best regards,</h6>
+        <h6>John's Company</h6>
+    """
+
+    message = MessageSchema(
+        subject= content.subject,
+        recipients=supplier_email,
+        body=html,
+        subtype="html"
+        )
+    fm = FastMail(conf)
+    await fm.send_message(message)
+    return {"status": "success", "message": f"Email sent to supplier of product id {product_id}"}
 
 register_tortoise(
     app,
