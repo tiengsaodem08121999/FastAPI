@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    container_name: fastapi-suppliers
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Giữ database sqlite trên host để không mất dữ liệu khi recreate container
+      - ./database.sqlite3:/app/database.sqlite3
+    restart: unless-stopped
+

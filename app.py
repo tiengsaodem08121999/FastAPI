@@ -14,10 +14,18 @@ from pydantic import EmailStr, BaseModel
 from typing import List
 
 #docenv
-from dotenv import dotenv_values
+import os
+from dotenv import load_dotenv
+
+# Load .env file if exists (for local development)
+# In Docker, environment variables are already set by docker-compose
+load_dotenv()
 
 #credentials
-credentials = dict(dotenv_values(".env"))
+credentials = {
+    'EMAIL': os.getenv('EMAIL', ''),
+    'PASSWORD': os.getenv('PASSWORD', '')
+}
 
 app = FastAPI()
 
