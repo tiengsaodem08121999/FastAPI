@@ -27,7 +27,24 @@ credentials = {
     'PASSWORD': os.getenv('PASSWORD', '')
 }
 
+# adding cors headers
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
+
+# adding cors urls 
+origins = [
+    "http://localhost:3000",
+]
+
+# add middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def index():
