@@ -32,15 +32,12 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
-# adding cors urls 
-origins = [
-    "http://localhost:3000",
-]
-
 # add middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=[
+        "http://localhost:3000"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -80,13 +77,20 @@ async def delete_supplier(supplier_id: int):
     return {"status": "success", "message": f"Deleted supplier with id {supplier_id}"}
 
 @app.post("/products/{supplier_id}")
-async def add_product_to_supplier(supplier_id: int, product_details: product_pydanticIn):
+async def add_product_to_supplier(
+    supplier_id: int,
+    product_details: product_pydanticIn
+):
     supplier = await Supplier.get(id=supplier_id)
-    product_details = product_details.dict(exclude_unset=True)
-    product_details['revenue'] += product_details['quantity_sold'] * product_details['unit_price']
-    product_obj = await Products.create(**product_details, supplied_by = supplier)
-    repsonse = await product_pydantic.from_tortoise_orm(product_obj)
-    return {"status": "success", "data": repsonse}
+    data = product_details.dict(exclude_unset=True)
+    data['revenue'] = data['quantity_sold'] * data['unit_price']
+
+    product_obj = await Products.create(
+        **data,
+        supplied_by=supplier
+    )
+    response = await product_pydantic.from_tortoise_orm(product_obj)
+    return {"status": "success", "data": response}
     
 @app.get("/products")
 async def get_all_products():
